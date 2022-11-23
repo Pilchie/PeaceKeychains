@@ -5,6 +5,11 @@ VisualStudioVersion = 17.5.33122.481
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PeaceKeychains.Web", "PeaceKeychains.Web\PeaceKeychains.Web.csproj", "{1346E831-DFFA-4EFC-8352-9421C2A640F6}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{E611D3D9-C036-4830-BD30-E649340E17DD}"
+	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
