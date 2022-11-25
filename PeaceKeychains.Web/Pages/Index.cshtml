@@ -8,3 +8,13 @@
     <h1 class="display-4">Welcome</h1>
     <p>This is a place to share pictures and stories of people with Peace Keychain.</p>
 </div>
+
+@if (Model.Posts is not null)
+{
+    @foreach (var p in Model.Posts)
+    {
+        <h3>@p.Title</h3>
+        <h4>@p.Time.ToShortTimeString() | @p.UserName</h4>
+        <p>@p.Text</p>
+    }
+}
