@@ -1,4 +1,5 @@
 using Azure.Identity;
+using Microsoft.Extensions.Azure;
 var builder = WebApplication.CreateBuilder(args);
 
 var keyVaultEndpoint = new Uri(Environment.GetEnvironmentVariable("VaultUri"));
@@ -6,6 +7,11 @@ builder.Configuration.AddAzureKeyVault(keyVaultEndpoint, new DefaultAzureCredent
 
 // Add services to the container.
 builder.Services.AddRazorPages();
+builder.Services.AddAzureClients(clientBuilder =>
+{
+    clientBuilder.AddBlobServiceClient(builder.Configuration["AzureStorageConnectionString:blob"], preferMsi: true);
+    clientBuilder.AddQueueServiceClient(builder.Configuration["AzureStorageConnectionString:queue"], preferMsi: true);
+});
 
 var app = builder.Build();
 
