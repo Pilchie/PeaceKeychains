@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
 
 namespace PeaceKeychains.Web.Models;
@@ -42,17 +43,14 @@ public class Post
 
     public string? Text { get; init; }
 
+    public string? LargeImageUrl { get; set; }
+
+    public string? ThumbNailImageUrl { get; set; }
+
+    public string? OriginalImageUrl { get; set; }
+
     public bool Approved { get; set; }
-}
 
-public class Image
-{
-    public Image(Uri largeImage)
-    {
-        ArgumentNullException.ThrowIfNull(largeImage);
-
-        LargeImage = largeImage;
-    }
-
-    public Uri LargeImage { get; init; }
+    [NotMapped]
+    public IFormFile? File { get; set; }
 }

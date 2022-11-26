@@ -19,6 +19,10 @@
         <hr />
         <h2>@p.Title</h2>
         <h4>@p.Time.ToShortTimeString() | @p.UserName</h4>
+        @if (!string.IsNullOrWhiteSpace(p.OriginalImageUrl))
+        {
+            <img src=@p.OriginalImageUrl></img>
+        }
         <p>@p.Text</p>
     }
 }

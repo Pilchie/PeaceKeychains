@@ -12,7 +12,8 @@ builder.Configuration.AddAzureKeyVault(keyVaultEndpoint, new DefaultAzureCredent
 builder.Services.AddRazorPages();
 builder.Services.AddAzureClients(clientBuilder =>
 {
-    clientBuilder.AddBlobServiceClient(builder.Configuration["AzureStorageConnectionString:blob"], preferMsi: true);
+    //clientBuilder.AddBlobServiceClient(builder.Configuration["AzureStorageConnectionString:blob"], preferMsi: true);
+    clientBuilder.AddBlobServiceClient(builder.Configuration["AzureStorageConnectionString"], preferMsi: false);
     clientBuilder.AddQueueServiceClient(builder.Configuration["AzureStorageConnectionString:queue"], preferMsi: true);
 });
 builder.Services.AddCosmos<PeaceKeychainsContext>(builder.Configuration["ConnectionStrings:AzureCosmosDBConnectionString"], "PostsDB");
@@ -36,16 +37,22 @@ app.UseAuthorization();
 
 app.MapRazorPages();
 
-using (var scope = app.Services.CreateScope())
-using (var dbContext = scope.ServiceProvider.GetRequiredService<PeaceKeychainsContext>())
+var populateDatabase = false;
+if (populateDatabase)
 {
-    await dbContext.Database.EnsureCreatedAsync();
-    if (!(await dbContext.Posts.Take(1).ToListAsync()).Any())
+    using (var scope = app.Services.CreateScope())
+    using (var dbContext = scope.ServiceProvider.GetRequiredService<PeaceKeychainsContext>())
     {
-        var p = new Post(Guid.NewGuid(), DateTime.Now, "First Post title", "Pilchie", "This is a sample post to see if it works");
-        p.Approved = true;
-        dbContext.Posts.Add(p);
-        await dbContext.SaveChangesAsync();
+        await dbContext.Database.EnsureCreatedAsync();
+        if (!(await dbContext.Posts.Take(1).ToListAsync()).Any())
+        {
+            var p = new Post(Guid.NewGuid(), DateTime.Now, "First Post title", "Pilchie", "This is a sample post to see if it works")
+            {
+                Approved = true
+            };
+            dbContext.Posts.Add(p);
+            await dbContext.SaveChangesAsync();
+        }
     }
 }
 
