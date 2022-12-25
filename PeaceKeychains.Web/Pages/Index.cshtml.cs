@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc.RazorPages;
+using System.Drawing.Printing;
+using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using PeaceKeychains.Web.Models;
 
@@ -6,6 +7,7 @@ namespace PeaceKeychains.Web.Pages;
 
 public class IndexModel : PageModel
 {
+    public const int PageSize = 10;
     private readonly ILogger<IndexModel> _logger;
     private readonly PeaceKeychainsContext _dbContext;
 
@@ -15,10 +17,17 @@ public class IndexModel : PageModel
         _dbContext = dbContext;
     }
 
-    public async Task OnGet()
+    public async Task OnGet(int? p)
     {
-        Posts = await _dbContext.Posts.Where(p => p.Approved).OrderByDescending(p => p.Time).Take(10).AsNoTracking().ToListAsync();
+        Count = await _dbContext.Posts.CountAsync();
+        Current = p == null ? 0 : p.Value;
+        Posts = await _dbContext.Posts.Where(p => p.Approved).OrderByDescending(p => p.Time).Skip(Current* PageSize).Take(PageSize).AsNoTracking().ToListAsync();
     }
 
     public List<Post>? Posts { get; private set; }
+
+    public int Count { get; private set; }
+
+    public int Current { get; private set; }
+
 }
