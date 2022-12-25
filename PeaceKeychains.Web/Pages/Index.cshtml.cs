@@ -1,4 +1,3 @@
-using System.Drawing.Printing;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using PeaceKeychains.Web.Models;
@@ -21,7 +20,7 @@ public class IndexModel : PageModel
     {
         Count = await _dbContext.Posts.CountAsync();
         Current = p == null ? 0 : p.Value;
-        Posts = await _dbContext.Posts.Where(p => p.Approved).OrderByDescending(p => p.Time).Skip(Current* PageSize).Take(PageSize).AsNoTracking().ToListAsync();
+        Posts = await _dbContext.Posts.Where(p => p.Approved).OrderBy(p => p.Time).Skip(Current* PageSize).Take(PageSize).AsNoTracking().ToListAsync();
     }
 
     public List<Post>? Posts { get; private set; }
