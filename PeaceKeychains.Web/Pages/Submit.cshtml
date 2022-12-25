@@ -7,6 +7,10 @@
 <div class="text-left">
     <h1 class="display-4">Submit a story</h1>
 
+    @if (!ModelState.IsValid)
+    {
+        <div class="alert-warning">Please supply a Title and User</div>
+    }
     <form method="post" enctype="multipart/form-data">
         <div class="form-group">
             <label for="titleTextBox">Title</label>
@@ -21,7 +25,7 @@
             <textarea id="textTextBox" name="text" class="form-control" row="3" placeholder="Tell everyone the story of how you got your Peace Keychain"></textarea>
         </div>
         <div class="form-group">
-            <label for="imageFileName"></label>
+            <label for="imageFileName">Image</label>
             <input id="imageFileName" name="image" type="file" class="form-control-file" />
         </div>
         <button type="submit" class="btn btn-primary">Submit</button>

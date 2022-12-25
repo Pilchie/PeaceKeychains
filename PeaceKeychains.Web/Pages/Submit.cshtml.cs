@@ -20,25 +20,43 @@ public class SubmitModel : PageModel
 
     public async Task<IActionResult> OnPost(string title, string user, string text, IFormFile image)
     {
-        var now = DateTime.Now;
-        var p = new Post(Guid.NewGuid(), now, title, user, text);
-
-        if (image is not null)
+        ModelState.Clear();
+        if (string.IsNullOrWhiteSpace(title))
         {
-            using var imageStream = image.OpenReadStream();
-            var containerClient = _blobClient.GetBlobContainerClient("images");
-            var blockBlobClient = containerClient.GetBlockBlobClient($"{now:O}-{image.FileName}");
-            var blobContentInfo = await blockBlobClient.UploadAsync(imageStream);
-            var blobInfo = await blockBlobClient.SetHttpHeadersAsync(new BlobHttpHeaders { ContentType = image.ContentType });
-            p.OriginalImageUrl = blockBlobClient.Uri.AbsoluteUri;
+            ModelState.AddModelError(nameof(title), "Please provide a title");
         }
 
-        // TODO: Queue generation of other image sizes, and notify the need for moderation.
-        p.Approved = true;
+        if (string.IsNullOrWhiteSpace(user))
+        {
+            ModelState.AddModelError(nameof(user), "Please provide a user");
+        }
 
-        _dbContext.Posts.Add(p);
-        await _dbContext.SaveChangesAsync();
+        if (!ModelState.IsValid)
+        {
+            return Page();
+        }
+        else
+        {
+            var now = DateTime.Now;
+            var p = new Post(Guid.NewGuid(), now, title, user, text);
 
-        return Redirect("/");
+            if (image is not null)
+            {
+                using var imageStream = image.OpenReadStream();
+                var containerClient = _blobClient.GetBlobContainerClient("images");
+                var blockBlobClient = containerClient.GetBlockBlobClient($"{now:O}-{image.FileName}");
+                var blobContentInfo = await blockBlobClient.UploadAsync(imageStream);
+                var blobInfo = await blockBlobClient.SetHttpHeadersAsync(new BlobHttpHeaders { ContentType = image.ContentType });
+                p.OriginalImageUrl = blockBlobClient.Uri.AbsoluteUri;
+            }
+
+            // TODO: Queue generation of other image sizes, and notify the need for moderation.
+            p.Approved = true;
+
+            _dbContext.Posts.Add(p);
+            await _dbContext.SaveChangesAsync();
+
+            return Redirect("/");
+        }
     }
 }
