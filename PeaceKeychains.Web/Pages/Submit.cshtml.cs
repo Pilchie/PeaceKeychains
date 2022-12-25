@@ -45,10 +45,12 @@ public class SubmitModel : PageModel
 
             if (image is not null)
             {
-                _logger.LogError($"Uploading image with FileName: {image.FileName}, ContentType: {image.ContentType}");
+                _logger.LogInformation($"Uploading image with FileName: {image.FileName}, ContentType: {image.ContentType}");
                 var containerClient = _blobClient.GetBlobContainerClient("images");
                 if (image.ContentType == "application/octet-stream" && Path.GetExtension(image.FileName) == ".heic")
                 {
+                    _logger.LogInformation("Converting image to jpg.");
+
                     var fileName = Path.ChangeExtension(image.FileName, ".jpg");
                     var contentType = "image/jpeg";
                     var blockBlobClient = containerClient.GetBlockBlobClient($"{now:O}-{fileName}");
