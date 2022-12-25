@@ -21,7 +21,7 @@
         <h4>@p.Time.ToShortTimeString() | @p.UserName</h4>
         @if (!string.IsNullOrWhiteSpace(p.OriginalImageUrl))
         {
-            <img src=@p.OriginalImageUrl>
+            <img src=@p.OriginalImageUrl class="img-fluid">
         }
         <p>@p.Text</p>
     }
