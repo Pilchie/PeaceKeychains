@@ -8,19 +8,8 @@ using PeaceKeychains.Web.Models;
 
 namespace PeaceKeychains.Web.Pages;
 
-public class SubmitModel : PageModel
+public class SubmitModel(PeaceKeychainsContext dbContext, BlobServiceClient blobClient, ILogger<SubmitModel> logger) : PageModel
 {
-    private readonly PeaceKeychainsContext _dbContext;
-    private readonly BlobServiceClient _blobClient;
-    private readonly ILogger<SubmitModel> _logger;
-
-    public SubmitModel(PeaceKeychainsContext dbContext, BlobServiceClient blobClient, ILogger<SubmitModel> logger)
-    {
-        _dbContext = dbContext;
-        _blobClient = blobClient;
-        _logger = logger;
-    }
-
     public async Task<IActionResult> OnPost(string title, string user, string text, IFormFile image)
     {
         ModelState.Clear();
@@ -45,11 +34,11 @@ public class SubmitModel : PageModel
 
             if (image is not null)
             {
-                _logger.LogInformation($"Uploading image with FileName: {image.FileName}, ContentType: {image.ContentType}");
-                var containerClient = _blobClient.GetBlobContainerClient("images");
+                logger.LogInformation("Uploading image with FileName: {filename}, ContentType: {contentType}", image.FileName, image.ContentType);
+                var containerClient = blobClient.GetBlobContainerClient("images");
                 if (image.ContentType == "application/octet-stream" && Path.GetExtension(image.FileName) == ".heic")
                 {
-                    _logger.LogInformation("Converting image to jpg.");
+                    logger.LogInformation("Converting image to jpg.");
 
                     var fileName = Path.ChangeExtension(image.FileName, ".jpg");
                     var contentType = "image/jpeg";
@@ -77,8 +66,8 @@ public class SubmitModel : PageModel
             // TODO: Queue generation of other image sizes, and notify the need for moderation.
             p.Approved = true;
 
-            _dbContext.Posts.Add(p);
-            await _dbContext.SaveChangesAsync();
+            dbContext.Posts.Add(p);
+            await dbContext.SaveChangesAsync();
 
             return Redirect("/");
         }

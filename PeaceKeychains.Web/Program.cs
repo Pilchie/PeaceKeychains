@@ -41,19 +41,17 @@ app.MapRazorPages();
 var populateDatabase = false;
 if (populateDatabase)
 {
-    using (var scope = app.Services.CreateScope())
-    using (var dbContext = scope.ServiceProvider.GetRequiredService<PeaceKeychainsContext>())
+    using var scope = app.Services.CreateScope();
+    using var dbContext = scope.ServiceProvider.GetRequiredService<PeaceKeychainsContext>();
+    await dbContext.Database.EnsureCreatedAsync();
+    if ((await dbContext.Posts.Take(1).ToListAsync()).Count == 0)
     {
-        await dbContext.Database.EnsureCreatedAsync();
-        if (!(await dbContext.Posts.Take(1).ToListAsync()).Any())
+        var p = new Post(Guid.NewGuid(), DateTime.Now, "First Post title", "Pilchie", "This is a sample post to see if it works")
         {
-            var p = new Post(Guid.NewGuid(), DateTime.Now, "First Post title", "Pilchie", "This is a sample post to see if it works")
-            {
-                Approved = true
-            };
-            dbContext.Posts.Add(p);
-            await dbContext.SaveChangesAsync();
-        }
+            Approved = true
+        };
+        dbContext.Posts.Add(p);
+        await dbContext.SaveChangesAsync();
     }
 }
 

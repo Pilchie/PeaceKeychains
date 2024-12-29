@@ -4,18 +4,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace PeaceKeychains.Web.Models;
 
-public class PeaceKeychainsContext : DbContext
+public class PeaceKeychainsContext(DbContextOptions<PeaceKeychainsContext> options) : DbContext(options)
 {
-    public PeaceKeychainsContext(DbContextOptions<PeaceKeychainsContext> options)
-        : base(options)
-    {
-    }
-
     public DbSet<Post> Posts { get; set; } = null!;
-
-    protected override void OnModelCreating(ModelBuilder modelBuilder)
-    {
-    }
 }
 
 public class Post
