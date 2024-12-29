@@ -23,6 +23,11 @@ public class SubmitModel(PeaceKeychainsContext dbContext, BlobServiceClient blob
             ModelState.AddModelError(nameof(user), "Please provide a user");
         }
 
+        if (string.IsNullOrWhiteSpace("text") && image is null)
+        {
+            ModelState.AddModelError(nameof(text), "Please provide either text or an image");
+        }
+
         if (!ModelState.IsValid)
         {
             return Page();
