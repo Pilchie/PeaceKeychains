@@ -4,19 +4,20 @@ using Microsoft.Extensions.Azure;
 using PeaceKeychains.Web.Models;
 
 var builder = WebApplication.CreateBuilder(args);
-
-var keyVaultEndpoint = new Uri(Environment.GetEnvironmentVariable("VaultUri"));
+var vaultUri = Environment.GetEnvironmentVariable("VaultUri") ?? throw new InvalidOperationException("Must set 'VaultUri' environment variable");
+var keyVaultEndpoint = new Uri(vaultUri);
 builder.Configuration.AddAzureKeyVault(keyVaultEndpoint, new DefaultAzureCredential());
 
 // Add services to the container.
 builder.Services.AddRazorPages();
 builder.Services.AddAzureClients(clientBuilder =>
 {
-    //clientBuilder.AddBlobServiceClient(builder.Configuration["AzureStorageConnectionString:blob"], preferMsi: true);
-    clientBuilder.AddBlobServiceClient(builder.Configuration["AzureStorageConnectionString"], preferMsi: false);
-    clientBuilder.AddQueueServiceClient(builder.Configuration["AzureStorageConnectionString:queue"], preferMsi: true);
+    var storageConnectionString = builder.Configuration["AzureStorageConnectionString"] ?? throw new InvalidOperationException("KeyVault must contain 'AzureStorageConnectionString'");
+    clientBuilder.AddBlobServiceClient(storageConnectionString, preferMsi: false);
+    //clientBuilder.AddQueueServiceClient(builder.Configuration["AzureStorageConnectionString:queue"], preferMsi: true);
 });
-builder.Services.AddCosmos<PeaceKeychainsContext>(builder.Configuration["ConnectionStrings:AzureCosmosDBConnectionString"], "PostsDB");
+var cosmosDBConnectionString = builder.Configuration["ConnectionStrings:AzureCosmosDBConnectionString"] ?? throw new InvalidOperationException("KeyVault must contain 'ConnectionStrings:AzureCosmosDBConnectionString'");
+builder.Services.AddCosmos<PeaceKeychainsContext>(cosmosDBConnectionString, "PostsDB");
 
 var app = builder.Build();
 
@@ -40,19 +41,17 @@ app.MapRazorPages();
 var populateDatabase = false;
 if (populateDatabase)
 {
-    using (var scope = app.Services.CreateScope())
-    using (var dbContext = scope.ServiceProvider.GetRequiredService<PeaceKeychainsContext>())
+    using var scope = app.Services.CreateScope();
+    using var dbContext = scope.ServiceProvider.GetRequiredService<PeaceKeychainsContext>();
+    await dbContext.Database.EnsureCreatedAsync();
+    if ((await dbContext.Posts.Take(1).ToListAsync()).Count == 0)
     {
-        await dbContext.Database.EnsureCreatedAsync();
-        if (!(await dbContext.Posts.Take(1).ToListAsync()).Any())
+        var p = new Post(Guid.NewGuid(), DateTime.Now, "First Post title", "Pilchie", "This is a sample post to see if it works")
         {
-            var p = new Post(Guid.NewGuid(), DateTime.Now, "First Post title", "Pilchie", "This is a sample post to see if it works")
-            {
-                Approved = true
-            };
-            dbContext.Posts.Add(p);
-            await dbContext.SaveChangesAsync();
-        }
+            Approved = true
+        };
+        dbContext.Posts.Add(p);
+        await dbContext.SaveChangesAsync();
     }
 }
 
