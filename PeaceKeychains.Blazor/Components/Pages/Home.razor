@@ -1,0 +1,130 @@
+﻿@page "/"
+@page "/{p:int?}"
+@using Humanizer
+@using Microsoft.EntityFrameworkCore
+@using PeaceKeychains.Shared.Data
+@using PeaceKeychains.Shared.Models
+@inject PeaceKeychainsContext DbContext
+
+<PageTitle>Home - Peace Keychains</PageTitle>
+
+<!-- Hero Section -->
+<div class="text-center mb-12">
+    <h1 class="text-4xl sm:text-5xl font-bold bg-gradient-to-r from-peace-600 to-calm-600 bg-clip-text text-transparent mb-4">
+        Welcome to Peace Keychains
+    </h1>
+    <p class="text-lg text-gray-600 max-w-2xl mx-auto mb-6">
+        Share pictures and stories of people with Peace Keychains. Spread peace, one keychain at a time.
+    </p>
+    <a href="/submit" class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-peace-500 to-peace-600 text-white font-semibold rounded-full shadow-lg hover:from-peace-600 hover:to-peace-700 transform hover:scale-105 transition-all duration-200">
+        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+        </svg>
+        Share Your Story
+    </a>
+</div>
+
+<!-- Posts Grid -->
+@if (Posts is not null && Posts.Count > 0)
+{
+    <div class="space-y-8">
+        @foreach (var post in Posts)
+        {
+            <article class="bg-white rounded-2xl shadow-md hover:shadow-xl transition-shadow duration-300 overflow-hidden">
+                @if (!string.IsNullOrWhiteSpace(post.OriginalImageUrl))
+                {
+                    <div class="aspect-video overflow-hidden bg-gray-100">
+                        <img src="@post.OriginalImageUrl" alt="@post.Title" class="w-full h-full object-cover hover:scale-105 transition-transform duration-500" />
+                    </div>
+                }
+                <div class="p-6">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-2">@post.Title</h2>
+                    <div class="flex items-center text-sm text-gray-500 mb-4">
+                        <span class="flex items-center">
+                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                            </svg>
+                            @post.UserName
+                        </span>
+                        <span class="mx-2">•</span>
+                        <span class="flex items-center">
+                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            @post.Time.Humanize(utcDate: true)
+                        </span>
+                    </div>
+                    @if (!string.IsNullOrWhiteSpace(post.Text))
+                    {
+                        <p class="text-gray-600 leading-relaxed">@post.Text</p>
+                    }
+                </div>
+            </article>
+        }
+    </div>
+
+    <!-- Pagination -->
+    <nav class="flex justify-center mt-12" aria-label="Page navigation">
+        <div class="inline-flex rounded-full shadow-sm bg-white">
+            @if (Current > 0)
+            {
+                <a href="/@(Current - 1)" class="px-5 py-2.5 text-sm font-medium text-gray-700 hover:text-peace-600 hover:bg-peace-50 rounded-l-full transition-colors">
+                    ← Previous
+                </a>
+            }
+            else
+            {
+                <span class="px-5 py-2.5 text-sm font-medium text-gray-400 cursor-not-allowed rounded-l-full">
+                    ← Previous
+                </span>
+            }
+            <span class="px-5 py-2.5 text-sm font-medium text-gray-700 border-x border-gray-200">
+                Page @(Current + 1)
+            </span>
+            @if (Current < Count / PageSize)
+            {
+                <a href="/@(Current + 1)" class="px-5 py-2.5 text-sm font-medium text-gray-700 hover:text-peace-600 hover:bg-peace-50 rounded-r-full transition-colors">
+                    Next →
+                </a>
+            }
+            else
+            {
+                <span class="px-5 py-2.5 text-sm font-medium text-gray-400 cursor-not-allowed rounded-r-full">
+                    Next →
+                </span>
+            }
+        </div>
+    </nav>
+}
+else
+{
+    <div class="text-center py-16">
+        <div class="text-6xl mb-4">☮️</div>
+        <h3 class="text-xl font-semibold text-gray-700 mb-2">No stories yet</h3>
+        <p class="text-gray-500">Be the first to share your Peace Keychain story!</p>
+    </div>
+}
+
+@code {
+    private const int PageSize = 10;
+
+    [Parameter]
+    public int? p { get; set; }
+
+    private List<Post>? Posts { get; set; }
+    private int Count { get; set; }
+    private int Current { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        Count = await DbContext.Posts.CountAsync();
+        Current = p ?? 0;
+        Posts = await DbContext.Posts
+            .Where(p => p.Approved)
+            .OrderByDescending(p => p.Time)
+            .Skip(Current * PageSize)
+            .Take(PageSize)
+            .AsNoTracking()
+            .ToListAsync();
+    }
+}

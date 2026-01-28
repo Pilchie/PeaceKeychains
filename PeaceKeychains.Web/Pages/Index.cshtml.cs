@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
-using PeaceKeychains.Web.Models;
+using PeaceKeychains.Shared.Data;
+using PeaceKeychains.Shared.Models;
 
 namespace PeaceKeychains.Web.Pages;
 

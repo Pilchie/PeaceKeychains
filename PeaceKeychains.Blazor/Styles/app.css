@@ -1,0 +1,26 @@
+@import "tailwindcss";
+
+/* Custom theme for Peace Keychains */
+@theme {
+  --color-peace-50: #f0fdf4;
+  --color-peace-100: #dcfce7;
+  --color-peace-200: #bbf7d0;
+  --color-peace-300: #86efac;
+  --color-peace-400: #4ade80;
+  --color-peace-500: #22c55e;
+  --color-peace-600: #16a34a;
+  --color-peace-700: #15803d;
+  --color-peace-800: #166534;
+  --color-peace-900: #14532d;
+
+  --color-calm-50: #eff6ff;
+  --color-calm-100: #dbeafe;
+  --color-calm-200: #bfdbfe;
+  --color-calm-300: #93c5fd;
+  --color-calm-400: #60a5fa;
+  --color-calm-500: #3b82f6;
+  --color-calm-600: #2563eb;
+  --color-calm-700: #1d4ed8;
+  --color-calm-800: #1e40af;
+  --color-calm-900: #1e3a8a;
+}

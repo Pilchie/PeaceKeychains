@@ -475,3 +475,8 @@ $RECYCLE.BIN/
 
 # Windows shortcuts
 *.lnk
+
+# Tailwind CSS standalone binary
+tailwindcss-linux-x64
+tailwindcss-macos-*
+tailwindcss-windows-*

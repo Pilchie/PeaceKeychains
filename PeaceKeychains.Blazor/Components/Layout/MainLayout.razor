@@ -1,0 +1,56 @@
+﻿@inherits LayoutComponentBase
+
+<div class="min-h-screen flex flex-col">
+    <!-- Navigation -->
+    <header class="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-50">
+        <nav class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <a href="/" class="text-2xl font-bold bg-gradient-to-r from-peace-600 to-calm-600 bg-clip-text text-transparent hover:from-peace-500 hover:to-calm-500 transition-all">
+                        ☮️ Peace Keychains
+                    </a>
+                </div>
+                <div class="hidden sm:flex sm:items-center sm:space-x-8">
+                    <a href="/" class="text-gray-700 hover:text-peace-600 px-3 py-2 text-sm font-medium transition-colors">Home</a>
+                    <a href="/submit" class="text-gray-700 hover:text-peace-600 px-3 py-2 text-sm font-medium transition-colors">Submit</a>
+                    <a href="/about" class="text-gray-700 hover:text-peace-600 px-3 py-2 text-sm font-medium transition-colors">About</a>
+                    <a href="/privacy" class="text-gray-700 hover:text-peace-600 px-3 py-2 text-sm font-medium transition-colors">Privacy</a>
+                </div>
+                <!-- Mobile menu button -->
+                <div class="sm:hidden flex items-center">
+                    <details class="relative">
+                        <summary class="list-none p-2 cursor-pointer">
+                            <svg class="h-6 w-6 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                            </svg>
+                        </summary>
+                        <div class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 z-50">
+                            <a href="/" class="block px-4 py-2 text-gray-700 hover:bg-peace-50">Home</a>
+                            <a href="/submit" class="block px-4 py-2 text-gray-700 hover:bg-peace-50">Submit</a>
+                            <a href="/about" class="block px-4 py-2 text-gray-700 hover:bg-peace-50">About</a>
+                            <a href="/privacy" class="block px-4 py-2 text-gray-700 hover:bg-peace-50">Privacy</a>
+                        </div>
+                    </details>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-1 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+        @Body
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white/60 backdrop-blur-sm border-t border-gray-200 mt-auto">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div class="flex flex-col sm:flex-row justify-between items-center space-y-2 sm:space-y-0">
+                <p class="text-gray-500 text-sm">&copy; 2024 Peace Keychains</p>
+                <div class="flex space-x-6">
+                    <a href="/privacy" class="text-gray-500 hover:text-peace-600 text-sm transition-colors">Privacy</a>
+                    <a href="/about" class="text-gray-500 hover:text-peace-600 text-sm transition-colors">About</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+</div>
