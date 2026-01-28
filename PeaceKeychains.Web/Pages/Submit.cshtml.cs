@@ -4,7 +4,8 @@ using Azure.Storage.Blobs.Specialized;
 using ImageMagick;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using PeaceKeychains.Web.Models;
+using PeaceKeychains.Shared.Data;
+using PeaceKeychains.Shared.Models;
 
 namespace PeaceKeychains.Web.Pages;
 

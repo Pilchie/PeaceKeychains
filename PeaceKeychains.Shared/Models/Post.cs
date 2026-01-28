@@ -1,13 +1,8 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Http;
 
-namespace PeaceKeychains.Web.Models;
-
-public class PeaceKeychainsContext(DbContextOptions<PeaceKeychainsContext> options) : DbContext(options)
-{
-    public DbSet<Post> Posts { get; set; } = null!;
-}
+namespace PeaceKeychains.Shared.Models;
 
 public class Post
 {
