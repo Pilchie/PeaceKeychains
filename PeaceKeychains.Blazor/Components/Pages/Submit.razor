@@ -3,7 +3,6 @@
 @using Azure.Storage.Blobs.Models
 @using Azure.Storage.Blobs.Specialized
 @using ImageMagick
-@using Microsoft.AspNetCore.Components.Forms
 @using PeaceKeychains.Shared.Data
 @using PeaceKeychains.Shared.Models
 @inject PeaceKeychainsContext DbContext
@@ -45,7 +44,7 @@
                 <!-- Title -->
                 <div>
                     <label for="title" class="block text-sm font-medium text-gray-700 mb-2">Title *</label>
-                    <input type="text" id="title" name="title" @bind="title"
+                    <input type="text" id="title" name="Title" value="@Model?.Title"
                            class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-peace-500 focus:border-peace-500 transition-colors"
                            placeholder="Something catchy..." />
                 </div>
@@ -53,7 +52,7 @@
                 <!-- User -->
                 <div>
                     <label for="user" class="block text-sm font-medium text-gray-700 mb-2">Your Name / Handle *</label>
-                    <input type="text" id="user" name="user" @bind="user"
+                    <input type="text" id="user" name="User" value="@Model?.User"
                            class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-peace-500 focus:border-peace-500 transition-colors"
                            placeholder="Email, Twitter, Instagram, or whatever you prefer" />
                 </div>
@@ -61,9 +60,9 @@
                 <!-- Text -->
                 <div>
                     <label for="text" class="block text-sm font-medium text-gray-700 mb-2">Your Story</label>
-                    <textarea id="text" name="text" @bind="text" rows="4"
+                    <textarea id="text" name="Text" rows="4"
                               class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-peace-500 focus:border-peace-500 transition-colors resize-none"
-                              placeholder="Tell everyone the story of how you got your Peace Keychain..."></textarea>
+                              placeholder="Tell everyone the story of how you got your Peace Keychain...">@Model?.Text</textarea>
                 </div>
 
                 <!-- Image Upload -->
@@ -77,36 +76,20 @@
                             <div class="flex text-sm text-gray-600">
                                 <label for="image" class="relative cursor-pointer rounded-md font-medium text-peace-600 hover:text-peace-500">
                                     <span>Upload a file</span>
-                                    <InputFile id="image" name="image" OnChange="HandleFileSelected" class="sr-only" accept="image/*" />
+                                    <input type="file" id="image" name="Image" class="sr-only" accept="image/*" />
                                 </label>
                                 <p class="pl-1">or drag and drop</p>
                             </div>
                             <p class="text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
-                            @if (!string.IsNullOrEmpty(selectedFileName))
-                            {
-                                <p class="text-sm text-peace-600 font-medium mt-2">Selected: @selectedFileName</p>
-                            }
+                            <p id="selected-file" class="text-sm text-peace-600 font-medium mt-2 hidden"></p>
                         </div>
                     </div>
                 </div>
 
                 <!-- Submit Button -->
-                <button type="submit" disabled="@isSubmitting"
+                <button type="submit"
                         class="w-full py-4 px-6 bg-gradient-to-r from-peace-500 to-peace-600 text-white font-semibold rounded-xl shadow-lg hover:from-peace-600 hover:to-peace-700 transform hover:scale-[1.02] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">
-                    @if (isSubmitting)
-                    {
-                        <span class="flex items-center justify-center">
-                            <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                            </svg>
-                            Submitting...
-                        </span>
-                    }
-                    else
-                    {
-                        <span>Share Your Story ☮️</span>
-                    }
+                    <span>Share Your Story ☮️</span>
                 </button>
             </div>
         </form>
@@ -120,93 +103,100 @@
     </div>
 </div>
 
-@code {
-    private string? title;
-    private string? user;
-    private string? text;
-    private IBrowserFile? selectedFile;
-    private string? selectedFileName;
-    private List<string> validationErrors = new();
-    private bool isSubmitting;
+<script>
+    document.getElementById('image').addEventListener('change', function(e) {
+        var selectedFile = document.getElementById('selected-file');
+        if (e.target.files.length > 0) {
+            selectedFile.textContent = 'Selected: ' + e.target.files[0].name;
+            selectedFile.classList.remove('hidden');
+        } else {
+            selectedFile.classList.add('hidden');
+        }
+    });
+</script>
 
-    private void HandleFileSelected(InputFileChangeEventArgs e)
+@code {
+    [SupplyParameterFromForm(FormName = "submit-form")]
+    private SubmitModel? Model { get; set; }
+
+    private List<string> validationErrors = new();
+
+    protected override void OnInitialized()
     {
-        selectedFile = e.File;
-        selectedFileName = e.File.Name;
+        Model ??= new();
     }
 
     private async Task HandleSubmit()
     {
         validationErrors.Clear();
 
-        if (string.IsNullOrWhiteSpace(title))
+        if (string.IsNullOrWhiteSpace(Model?.Title))
             validationErrors.Add("Please provide a title");
 
-        if (string.IsNullOrWhiteSpace(user))
+        if (string.IsNullOrWhiteSpace(Model?.User))
             validationErrors.Add("Please provide your name or handle");
 
-        if (string.IsNullOrWhiteSpace(text) && selectedFile is null)
+        if (string.IsNullOrWhiteSpace(Model?.Text) && Model?.Image is null)
             validationErrors.Add("Please provide either text or an image");
 
         if (validationErrors.Count > 0)
             return;
 
-        isSubmitting = true;
+        var now = DateTime.Now;
+        var post = new Post(Guid.NewGuid(), now, Model.Title!, Model.User!, Model.Text);
 
-        try
+        if (Model.Image is not null)
         {
-            var now = DateTime.Now;
-            var post = new Post(Guid.NewGuid(), now, title!, user!, text);
+            Logger.LogInformation("Uploading image with FileName: {filename}, ContentType: {contentType}", 
+                Model.Image.FileName, Model.Image.ContentType);
 
-            if (selectedFile is not null)
+            var containerClient = BlobClient.GetBlobContainerClient("images");
+
+            if (Model.Image.ContentType == "application/octet-stream" && 
+                Path.GetExtension(Model.Image.FileName).Equals(".heic", StringComparison.OrdinalIgnoreCase))
             {
-                Logger.LogInformation("Uploading image with FileName: {filename}, ContentType: {contentType}", 
-                    selectedFile.Name, selectedFile.ContentType);
+                Logger.LogInformation("Converting image to jpg.");
 
-                var containerClient = BlobClient.GetBlobContainerClient("images");
+                var fileName = Path.ChangeExtension(Model.Image.FileName, ".jpg");
+                var contentType = "image/jpeg";
+                var blockBlobClient = containerClient.GetBlockBlobClient($"{now:O}-{fileName}");
 
-                if (selectedFile.ContentType == "application/octet-stream" && 
-                    Path.GetExtension(selectedFile.Name).Equals(".heic", StringComparison.OrdinalIgnoreCase))
-                {
-                    Logger.LogInformation("Converting image to jpg.");
+                using var imageStream = Model.Image.OpenReadStream();
+                using var memStream = new MemoryStream();
+                await imageStream.CopyToAsync(memStream);
+                memStream.Position = 0;
 
-                    var fileName = Path.ChangeExtension(selectedFile.Name, ".jpg");
-                    var contentType = "image/jpeg";
-                    var blockBlobClient = containerClient.GetBlockBlobClient($"{now:O}-{fileName}");
+                using var magickImage = new MagickImage(memStream);
+                magickImage.Format = MagickFormat.Jpeg;
+                var data = magickImage.ToByteArray();
 
-                    using var imageStream = selectedFile.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024);
-                    using var memStream = new MemoryStream();
-                    await imageStream.CopyToAsync(memStream);
-                    memStream.Position = 0;
-
-                    using var magickImage = new MagickImage(memStream);
-                    magickImage.Format = MagickFormat.Jpeg;
-                    var data = magickImage.ToByteArray();
-
-                    using var convertedStream = new MemoryStream(data, false);
-                    await blockBlobClient.UploadAsync(convertedStream);
-                    await blockBlobClient.SetHttpHeadersAsync(new BlobHttpHeaders { ContentType = contentType });
-                    post.OriginalImageUrl = blockBlobClient.Uri.AbsoluteUri;
-                }
-                else
-                {
-                    using var imageStream = selectedFile.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024);
-                    var blockBlobClient = containerClient.GetBlockBlobClient($"{now:O}-{selectedFile.Name}");
-                    await blockBlobClient.UploadAsync(imageStream);
-                    await blockBlobClient.SetHttpHeadersAsync(new BlobHttpHeaders { ContentType = selectedFile.ContentType });
-                    post.OriginalImageUrl = blockBlobClient.Uri.AbsoluteUri;
-                }
+                using var convertedStream = new MemoryStream(data, false);
+                await blockBlobClient.UploadAsync(convertedStream);
+                await blockBlobClient.SetHttpHeadersAsync(new BlobHttpHeaders { ContentType = contentType });
+                post.OriginalImageUrl = blockBlobClient.Uri.AbsoluteUri;
             }
-
-            post.Approved = true;
-            DbContext.Posts.Add(post);
-            await DbContext.SaveChangesAsync();
-
-            Navigation.NavigateTo("/");
+            else
+            {
+                using var imageStream = Model.Image.OpenReadStream();
+                var blockBlobClient = containerClient.GetBlockBlobClient($"{now:O}-{Model.Image.FileName}");
+                await blockBlobClient.UploadAsync(imageStream);
+                await blockBlobClient.SetHttpHeadersAsync(new BlobHttpHeaders { ContentType = Model.Image.ContentType });
+                post.OriginalImageUrl = blockBlobClient.Uri.AbsoluteUri;
+            }
         }
-        finally
-        {
-            isSubmitting = false;
-        }
+
+        post.Approved = true;
+        DbContext.Posts.Add(post);
+        await DbContext.SaveChangesAsync();
+
+        Navigation.NavigateTo("/");
+    }
+
+    private class SubmitModel
+    {
+        public string? Title { get; set; }
+        public string? User { get; set; }
+        public string? Text { get; set; }
+        public IFormFile? Image { get; set; }
     }
 }
