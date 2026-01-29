@@ -108,7 +108,7 @@
     [SupplyParameterFromForm(FormName = "submit-form")]
     private SubmitModel? Model { get; set; }
 
-    private List<string> validationErrors = new();
+    private readonly List<string> validationErrors = new();
 
     protected override void OnInitialized()
     {
