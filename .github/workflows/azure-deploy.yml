@@ -52,6 +52,9 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-nuget-
 
+      - name: npm install
+        run: npm install PeaceKeychains.Blazor
+
       - name: Build with dotnet
         run: dotnet build --configuration Release
 
