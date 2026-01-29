@@ -23,7 +23,7 @@ jobs:
     - name: Restore dependencies
       run: dotnet restore
     - name: npm install
-      run: npm install PeaceKeychains.Blazor
+      run: cd PeaceKeychains.Blazor && npm install
     - name: Build
       run: dotnet build --no-restore
     - name: Test
