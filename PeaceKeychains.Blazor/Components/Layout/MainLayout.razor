@@ -56,5 +56,10 @@
 </div>
 
 @code {
-    private int CurrentYear => DateTime.UtcNow.Year;
+    private int CurrentYear { get; set; }
+
+    protected override void OnInitialized()
+    {
+        CurrentYear = DateTime.UtcNow.Year;
+    }
 }
