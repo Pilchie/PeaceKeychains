@@ -76,7 +76,8 @@
                             <div class="flex text-sm text-gray-600">
                                 <label for="image" class="relative cursor-pointer rounded-md font-medium text-peace-600 hover:text-peace-500">
                                     <span>Upload a file</span>
-                                    <input type="file" id="image" name="Model.Image" class="sr-only" accept="image/*" />
+                                    <input type="file" id="image" name="Model.Image" class="sr-only" accept="image/*" 
+                                           onchange="document.getElementById('selected-file').textContent = this.files.length > 0 ? 'Selected: ' + this.files[0].name : ''; document.getElementById('selected-file').classList.toggle('hidden', this.files.length === 0);" />
                                 </label>
                                 <p class="pl-1">or drag and drop</p>
                             </div>
@@ -102,23 +103,6 @@
         </p>
     </div>
 </div>
-
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        var imageInput = document.getElementById('image');
-        var selectedFile = document.getElementById('selected-file');
-        if (imageInput && selectedFile) {
-            imageInput.addEventListener('change', function(e) {
-                if (e.target.files.length > 0) {
-                    selectedFile.textContent = 'Selected: ' + e.target.files[0].name;
-                    selectedFile.classList.remove('hidden');
-                } else {
-                    selectedFile.classList.add('hidden');
-                }
-            });
-        }
-    });
-</script>
 
 @code {
     [SupplyParameterFromForm(FormName = "submit-form")]
