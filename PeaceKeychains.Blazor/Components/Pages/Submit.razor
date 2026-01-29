@@ -121,9 +121,13 @@
 
         if (string.IsNullOrWhiteSpace(Model?.Title))
             validationErrors.Add("Please provide a title");
+        else if (Model!.Title!.Length > 200)
+            validationErrors.Add("Title must be 200 characters or fewer");
 
         if (string.IsNullOrWhiteSpace(Model?.User))
             validationErrors.Add("Please provide your name or handle");
+        else if (Model!.User!.Length > 100)
+            validationErrors.Add("Name or handle must be 100 characters or fewer");
 
         if (string.IsNullOrWhiteSpace(Model?.Text) && Model?.Image is null)
             validationErrors.Add("Please provide either text or an image");
