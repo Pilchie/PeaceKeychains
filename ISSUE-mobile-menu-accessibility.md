@@ -9,7 +9,7 @@ Improve Mobile Menu Accessibility
 
 ## Description
 
-The mobile menu implementation in `PeaceKeychains.Blazor/Components/Layout/MainLayout.razor` (lines 21-33) uses an HTML `<details>`/`<summary>` element which has poor accessibility support.
+The mobile menu implementation in `PeaceKeychains.Blazor/Components/Layout/MainLayout.razor` uses an HTML `<details>`/`<summary>` element which has poor accessibility support.
 
 ## Current Issues
 
@@ -32,7 +32,7 @@ Consider implementing a proper accessible mobile menu either by:
 ## Code Location
 
 **File:** `PeaceKeychains.Blazor/Components/Layout/MainLayout.razor`  
-**Lines:** 21-33
+**Location:** Mobile menu implementation using `<details>`/`<summary>` HTML elements
 
 ```razor
 <details class="relative">
@@ -67,4 +67,4 @@ Consider implementing a proper accessible mobile menu either by:
 
 - Original PR: #24
 - Review comment: https://github.com/Pilchie/PeaceKeychains/pull/24#discussion_r2739325230
-- Fix commit: 856a51c (Added TODO comment to track this issue)
+- TODO comment added in commit: 856a51c
