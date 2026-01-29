@@ -4,8 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "build:css": "./tailwindcss-linux-x64 -i Styles/app.css -o wwwroot/css/app.css --minify",
-    "watch:css": "./tailwindcss-linux-x64 -i Styles/app.css -o wwwroot/css/app.css --watch"
+    "build:css": "npx tailwindcss/cli -i Styles/app.css -o wwwroot/css/app.css --minify",
+    "watch:css": "npx tailwindcss/cli -i Styles/app.css -o wwwroot/css/app.css --watch"
   },
   "keywords": [],
   "author": "",
