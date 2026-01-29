@@ -132,7 +132,7 @@
             return;
 
         var now = DateTime.Now;
-        var post = new Post(Guid.NewGuid(), now, Model.Title!, Model.User!, Model.Text);
+        var post = new Post(Guid.NewGuid(), now, Model!.Title!, Model.User!, Model.Text);
 
         if (Model.Image is not null)
         {
