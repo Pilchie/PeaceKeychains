@@ -54,7 +54,7 @@
                     <label for="user" class="block text-sm font-medium text-gray-700 mb-2">Your Name / Handle *</label>
                     <input type="text" id="user" name="Model.User" value="@Model?.User"
                            class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-peace-500 focus:border-peace-500 transition-colors"
-                           placeholder="Email, Twitter, Instagram, or whatever you prefer" />
+                           placeholder="Email, Instagram, Threads, Bluesky, or whatever you prefer" />
                 </div>
 
                 <!-- Text -->
@@ -104,13 +104,18 @@
 </div>
 
 <script>
-    document.getElementById('image').addEventListener('change', function(e) {
+    document.addEventListener('DOMContentLoaded', function() {
+        var imageInput = document.getElementById('image');
         var selectedFile = document.getElementById('selected-file');
-        if (e.target.files.length > 0) {
-            selectedFile.textContent = 'Selected: ' + e.target.files[0].name;
-            selectedFile.classList.remove('hidden');
-        } else {
-            selectedFile.classList.add('hidden');
+        if (imageInput && selectedFile) {
+            imageInput.addEventListener('change', function(e) {
+                if (e.target.files.length > 0) {
+                    selectedFile.textContent = 'Selected: ' + e.target.files[0].name;
+                    selectedFile.classList.remove('hidden');
+                } else {
+                    selectedFile.classList.add('hidden');
+                }
+            });
         }
     });
 </script>
