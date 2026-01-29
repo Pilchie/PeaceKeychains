@@ -120,8 +120,8 @@ else
         Count = await DbContext.Posts.CountAsync();
         Current = p ?? 0;
         Posts = await DbContext.Posts
-            .Where(p => p.Approved)
-            .OrderByDescending(p => p.Time)
+            .Where(post => post.Approved)
+            .OrderByDescending(post => post.Time)
             .Skip(Current * PageSize)
             .Take(PageSize)
             .AsNoTracking()
