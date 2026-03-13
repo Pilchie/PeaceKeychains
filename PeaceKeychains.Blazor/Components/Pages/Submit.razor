@@ -184,7 +184,7 @@
             }
         }
 
-        post.Approved = string.IsNullOrEmpty(Model.Website);
+        post.Approved = string.IsNullOrWhiteSpace(Model.Website);
         DbContext.Posts.Add(post);
         await DbContext.SaveChangesAsync();
 
