@@ -154,7 +154,7 @@
             // Validate and sanitize extension
             validatedExtension = Path.GetExtension(Path.GetFileName(Model.Image.FileName));
             if (!AllowedExtensions.Contains(validatedExtension, StringComparer.OrdinalIgnoreCase))
-                validationErrors.Add("Only image files (JPG, PNG, GIF, WebP, HEIC) are allowed");
+                validationErrors.Add("Only image files (JPG/JPEG, PNG, GIF, WebP, HEIC) are allowed");
             else
                 validatedExtension = validatedExtension.ToLowerInvariant();
 
