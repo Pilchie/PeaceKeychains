@@ -143,6 +143,7 @@
 
         // Image validation
         string? validatedExtension = null;
+        string? validatedMimeType = null;
         byte[]? imageBytes = null;
         if (Model?.Image is not null)
         {
@@ -151,11 +152,13 @@
                 validationErrors.Add("Image must be 10MB or smaller");
 
             // Validate and sanitize extension
-            validatedExtension = Path.GetExtension(Path.GetFileName(Model.Image.FileName)).ToLowerInvariant();
-            if (!AllowedExtensions.Contains(validatedExtension))
+            validatedExtension = Path.GetExtension(Path.GetFileName(Model.Image.FileName));
+            if (!AllowedExtensions.Contains(validatedExtension, StringComparer.OrdinalIgnoreCase))
                 validationErrors.Add("Only image files (JPG, PNG, GIF, WebP, HEIC) are allowed");
+            else
+                validatedExtension = validatedExtension.ToLowerInvariant();
 
-            // Read file and validate magic bytes
+            // Read file and validate content via ImageMagick
             if (validationErrors.Count == 0)
             {
                 using var stream = Model.Image.OpenReadStream();
@@ -163,7 +166,8 @@
                 await stream.CopyToAsync(memStream);
                 imageBytes = memStream.ToArray();
 
-                if (!IsValidImageContent(imageBytes, validatedExtension))
+                validatedMimeType = GetMimeTypeIfValid(imageBytes, validatedExtension);
+                if (validatedMimeType is null)
                     validationErrors.Add("File content does not match a valid image format");
             }
         }
@@ -174,7 +178,7 @@
         var now = DateTime.Now;
         var post = new Post(Guid.NewGuid(), now, Model!.Title!, Model.User!, Model.Text);
 
-        if (imageBytes is not null && validatedExtension is not null)
+        if (imageBytes is not null && validatedExtension is not null && validatedMimeType is not null)
         {
             Logger.LogInformation("Uploading validated image with extension: {extension}", validatedExtension);
 
@@ -200,12 +204,11 @@
             }
             else
             {
-                var contentType = GetContentTypeFromExtension(validatedExtension);
                 var blockBlobClient = containerClient.GetBlockBlobClient($"{now:O}-{safeFileName}");
 
                 using var uploadStream = new MemoryStream(imageBytes, false);
                 await blockBlobClient.UploadAsync(uploadStream);
-                await blockBlobClient.SetHttpHeadersAsync(new BlobHttpHeaders { ContentType = contentType });
+                await blockBlobClient.SetHttpHeadersAsync(new BlobHttpHeaders { ContentType = validatedMimeType });
                 post.OriginalImageUrl = blockBlobClient.Uri.AbsoluteUri;
             }
         }
@@ -217,35 +220,30 @@
         Navigation.NavigateTo("/");
     }
 
-    private static bool IsValidImageContent(byte[] data, string extension)
+    private static string? GetMimeTypeIfValid(byte[] data, string extension)
     {
-        if (data.Length < 12)
-            return false;
-
-        return extension switch
+        try
         {
-            ".jpg" or ".jpeg" => data[0] == 0xFF && data[1] == 0xD8 && data[2] == 0xFF,
-            ".png" => data[0] == 0x89 && data[1] == 0x50 && data[2] == 0x4E && data[3] == 0x47 &&
-                      data[4] == 0x0D && data[5] == 0x0A && data[6] == 0x1A && data[7] == 0x0A,
-            ".gif" => data[0] == 0x47 && data[1] == 0x49 && data[2] == 0x46 && data[3] == 0x38,
-            ".webp" => data[0] == 0x52 && data[1] == 0x49 && data[2] == 0x46 && data[3] == 0x46 &&
-                       data[8] == 0x57 && data[9] == 0x45 && data[10] == 0x42 && data[11] == 0x50,
-            ".heic" => data.Length >= 12 && data[4] == 0x66 && data[5] == 0x74 && data[6] == 0x79 && data[7] == 0x70,
-            _ => false
-        };
-    }
+            var info = new MagickImageInfo(data);
+            var formatMatches = extension switch
+            {
+                ".jpg" or ".jpeg" => info.Format == MagickFormat.Jpeg,
+                ".png" => info.Format == MagickFormat.Png,
+                ".gif" => info.Format == MagickFormat.Gif || info.Format == MagickFormat.Gif87,
+                ".webp" => info.Format == MagickFormat.WebP,
+                ".heic" => info.Format == MagickFormat.Heic || info.Format == MagickFormat.Heif,
+                _ => false
+            };
 
-    private static string GetContentTypeFromExtension(string extension)
-    {
-        return extension switch
+            if (!formatMatches)
+                return null;
+
+            return MagickFormatInfo.Create(info.Format)?.MimeType ?? "application/octet-stream";
+        }
+        catch (MagickErrorException)
         {
-            ".jpg" or ".jpeg" => "image/jpeg",
-            ".png" => "image/png",
-            ".gif" => "image/gif",
-            ".webp" => "image/webp",
-            ".heic" => "image/heic",
-            _ => "application/octet-stream"
-        };
+            return null;
+        }
     }
 
     private class SubmitModel
