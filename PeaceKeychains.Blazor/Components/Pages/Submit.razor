@@ -151,9 +151,11 @@
                 validationErrors.Add("Image must be 10MB or smaller");
 
             // Validate and sanitize extension
-            validatedExtension = Path.GetExtension(Path.GetFileName(Model.Image.FileName)).ToLowerInvariant();
-            if (!AllowedExtensions.Contains(validatedExtension))
+            validatedExtension = Path.GetExtension(Path.GetFileName(Model.Image.FileName));
+            if (!AllowedExtensions.Contains(validatedExtension, StringComparer.OrdinalIgnoreCase))
                 validationErrors.Add("Only image files (JPG, PNG, GIF, WebP, HEIC) are allowed");
+            else
+                validatedExtension = validatedExtension.ToLowerInvariant();
 
             // Read file and validate magic bytes
             if (validationErrors.Count == 0)
@@ -219,20 +221,23 @@
 
     private static bool IsValidImageContent(byte[] data, string extension)
     {
-        if (data.Length < 12)
-            return false;
-
-        return extension switch
+        try
         {
-            ".jpg" or ".jpeg" => data[0] == 0xFF && data[1] == 0xD8 && data[2] == 0xFF,
-            ".png" => data[0] == 0x89 && data[1] == 0x50 && data[2] == 0x4E && data[3] == 0x47 &&
-                      data[4] == 0x0D && data[5] == 0x0A && data[6] == 0x1A && data[7] == 0x0A,
-            ".gif" => data[0] == 0x47 && data[1] == 0x49 && data[2] == 0x46 && data[3] == 0x38,
-            ".webp" => data[0] == 0x52 && data[1] == 0x49 && data[2] == 0x46 && data[3] == 0x46 &&
-                       data[8] == 0x57 && data[9] == 0x45 && data[10] == 0x42 && data[11] == 0x50,
-            ".heic" => data.Length >= 12 && data[4] == 0x66 && data[5] == 0x74 && data[6] == 0x79 && data[7] == 0x70,
-            _ => false
-        };
+            var info = new MagickImageInfo(data);
+            return extension switch
+            {
+                ".jpg" or ".jpeg" => info.Format == MagickFormat.Jpeg,
+                ".png" => info.Format == MagickFormat.Png,
+                ".gif" => info.Format == MagickFormat.Gif || info.Format == MagickFormat.Gif87,
+                ".webp" => info.Format == MagickFormat.WebP,
+                ".heic" => info.Format == MagickFormat.Heic || info.Format == MagickFormat.Heif,
+                _ => false
+            };
+        }
+        catch (MagickErrorException)
+        {
+            return false;
+        }
     }
 
     private static string GetContentTypeFromExtension(string extension)
