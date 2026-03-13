@@ -87,6 +87,12 @@
                     </div>
                 </div>
 
+                <!-- Honeypot field - hidden from users, bots will fill it -->
+                <div class="hidden" aria-hidden="true" style="position:absolute;left:-9999px;">
+                    <label for="website">Website</label>
+                    <input type="text" id="website" name="Model.Website" value="@Model?.Website" tabindex="-1" autocomplete="off" />
+                </div>
+
                 <!-- Submit Button -->
                 <button type="submit"
                         class="w-full py-4 px-6 bg-gradient-to-r from-peace-500 to-peace-600 text-white font-semibold rounded-xl shadow-lg hover:from-peace-600 hover:to-peace-700 transform hover:scale-[1.02] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">
@@ -178,7 +184,7 @@
             }
         }
 
-        post.Approved = true;
+        post.Approved = string.IsNullOrEmpty(Model.Website);
         DbContext.Posts.Add(post);
         await DbContext.SaveChangesAsync();
 
@@ -191,5 +197,6 @@
         public string? User { get; set; }
         public string? Text { get; set; }
         public IFormFile? Image { get; set; }
+        public string? Website { get; set; } // Honeypot field
     }
 }
