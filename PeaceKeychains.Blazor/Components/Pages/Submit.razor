@@ -143,6 +143,7 @@
 
         // Image validation
         string? validatedExtension = null;
+        string? validatedMimeType = null;
         byte[]? imageBytes = null;
         if (Model?.Image is not null)
         {
@@ -157,7 +158,7 @@
             else
                 validatedExtension = validatedExtension.ToLowerInvariant();
 
-            // Read file and validate magic bytes
+            // Read file and validate content via ImageMagick
             if (validationErrors.Count == 0)
             {
                 using var stream = Model.Image.OpenReadStream();
@@ -165,7 +166,8 @@
                 await stream.CopyToAsync(memStream);
                 imageBytes = memStream.ToArray();
 
-                if (!IsValidImageContent(imageBytes, validatedExtension))
+                validatedMimeType = GetMimeTypeIfValid(imageBytes, validatedExtension);
+                if (validatedMimeType is null)
                     validationErrors.Add("File content does not match a valid image format");
             }
         }
@@ -176,7 +178,7 @@
         var now = DateTime.Now;
         var post = new Post(Guid.NewGuid(), now, Model!.Title!, Model.User!, Model.Text);
 
-        if (imageBytes is not null && validatedExtension is not null)
+        if (imageBytes is not null && validatedExtension is not null && validatedMimeType is not null)
         {
             Logger.LogInformation("Uploading validated image with extension: {extension}", validatedExtension);
 
@@ -202,12 +204,11 @@
             }
             else
             {
-                var contentType = GetContentTypeFromExtension(validatedExtension);
                 var blockBlobClient = containerClient.GetBlockBlobClient($"{now:O}-{safeFileName}");
 
                 using var uploadStream = new MemoryStream(imageBytes, false);
                 await blockBlobClient.UploadAsync(uploadStream);
-                await blockBlobClient.SetHttpHeadersAsync(new BlobHttpHeaders { ContentType = contentType });
+                await blockBlobClient.SetHttpHeadersAsync(new BlobHttpHeaders { ContentType = validatedMimeType });
                 post.OriginalImageUrl = blockBlobClient.Uri.AbsoluteUri;
             }
         }
@@ -219,12 +220,12 @@
         Navigation.NavigateTo("/");
     }
 
-    private static bool IsValidImageContent(byte[] data, string extension)
+    private static string? GetMimeTypeIfValid(byte[] data, string extension)
     {
         try
         {
             var info = new MagickImageInfo(data);
-            return extension switch
+            var formatMatches = extension switch
             {
                 ".jpg" or ".jpeg" => info.Format == MagickFormat.Jpeg,
                 ".png" => info.Format == MagickFormat.Png,
@@ -233,24 +234,16 @@
                 ".heic" => info.Format == MagickFormat.Heic || info.Format == MagickFormat.Heif,
                 _ => false
             };
+
+            if (!formatMatches)
+                return null;
+
+            return MagickFormatInfo.Create(info.Format)?.MimeType ?? "application/octet-stream";
         }
         catch (MagickErrorException)
         {
-            return false;
+            return null;
         }
-    }
-
-    private static string GetContentTypeFromExtension(string extension)
-    {
-        return extension switch
-        {
-            ".jpg" or ".jpeg" => "image/jpeg",
-            ".png" => "image/png",
-            ".gif" => "image/gif",
-            ".webp" => "image/webp",
-            ".heic" => "image/heic",
-            _ => "application/octet-stream"
-        };
     }
 
     private class SubmitModel
