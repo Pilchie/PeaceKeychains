@@ -111,6 +111,9 @@
 </div>
 
 @code {
+    private const long MaxFileSize = 10 * 1024 * 1024; // 10MB
+    private static readonly string[] AllowedExtensions = { ".jpg", ".jpeg", ".png", ".gif", ".webp", ".heic" };
+
     [SupplyParameterFromForm(FormName = "submit-form")]
     private SubmitModel? Model { get; set; }
 
@@ -138,48 +141,71 @@
         if (string.IsNullOrWhiteSpace(Model?.Text) && Model?.Image is null)
             validationErrors.Add("Please provide either text or an image");
 
+        // Image validation
+        string? validatedExtension = null;
+        byte[]? imageBytes = null;
+        if (Model?.Image is not null)
+        {
+            // Validate file size
+            if (Model.Image.Length > MaxFileSize)
+                validationErrors.Add("Image must be 10MB or smaller");
+
+            // Validate and sanitize extension
+            validatedExtension = Path.GetExtension(Path.GetFileName(Model.Image.FileName)).ToLowerInvariant();
+            if (!AllowedExtensions.Contains(validatedExtension))
+                validationErrors.Add("Only image files (JPG, PNG, GIF, WebP, HEIC) are allowed");
+
+            // Read file and validate magic bytes
+            if (validationErrors.Count == 0)
+            {
+                using var stream = Model.Image.OpenReadStream();
+                using var memStream = new MemoryStream();
+                await stream.CopyToAsync(memStream);
+                imageBytes = memStream.ToArray();
+
+                if (!IsValidImageContent(imageBytes, validatedExtension))
+                    validationErrors.Add("File content does not match a valid image format");
+            }
+        }
+
         if (validationErrors.Count > 0)
             return;
 
         var now = DateTime.Now;
         var post = new Post(Guid.NewGuid(), now, Model!.Title!, Model.User!, Model.Text);
 
-        if (Model.Image is not null)
+        if (imageBytes is not null && validatedExtension is not null)
         {
-            Logger.LogInformation("Uploading image with FileName: {filename}, ContentType: {contentType}", 
-                Model.Image.FileName, Model.Image.ContentType);
+            Logger.LogInformation("Uploading validated image with extension: {extension}", validatedExtension);
 
             var containerClient = BlobClient.GetBlobContainerClient("images");
+            var safeFileName = $"{Guid.NewGuid()}{validatedExtension}";
 
-            if (Model.Image.ContentType == "application/octet-stream" && 
-                Path.GetExtension(Model.Image.FileName).Equals(".heic", StringComparison.OrdinalIgnoreCase))
+            if (validatedExtension == ".heic")
             {
-                Logger.LogInformation("Converting image to jpg.");
+                Logger.LogInformation("Converting HEIC image to JPG.");
 
-                var fileName = Path.ChangeExtension(Model.Image.FileName, ".jpg");
-                var contentType = "image/jpeg";
-                var blockBlobClient = containerClient.GetBlockBlobClient($"{now:O}-{fileName}");
-
-                using var imageStream = Model.Image.OpenReadStream();
-                using var memStream = new MemoryStream();
-                await imageStream.CopyToAsync(memStream);
-                memStream.Position = 0;
-
+                using var memStream = new MemoryStream(imageBytes);
                 using var magickImage = new MagickImage(memStream);
                 magickImage.Format = MagickFormat.Jpeg;
                 var data = magickImage.ToByteArray();
 
+                safeFileName = $"{Guid.NewGuid()}.jpg";
+                var blockBlobClient = containerClient.GetBlockBlobClient($"{now:O}-{safeFileName}");
+
                 using var convertedStream = new MemoryStream(data, false);
                 await blockBlobClient.UploadAsync(convertedStream);
-                await blockBlobClient.SetHttpHeadersAsync(new BlobHttpHeaders { ContentType = contentType });
+                await blockBlobClient.SetHttpHeadersAsync(new BlobHttpHeaders { ContentType = "image/jpeg" });
                 post.OriginalImageUrl = blockBlobClient.Uri.AbsoluteUri;
             }
             else
             {
-                using var imageStream = Model.Image.OpenReadStream();
-                var blockBlobClient = containerClient.GetBlockBlobClient($"{now:O}-{Model.Image.FileName}");
-                await blockBlobClient.UploadAsync(imageStream);
-                await blockBlobClient.SetHttpHeadersAsync(new BlobHttpHeaders { ContentType = Model.Image.ContentType });
+                var contentType = GetContentTypeFromExtension(validatedExtension);
+                var blockBlobClient = containerClient.GetBlockBlobClient($"{now:O}-{safeFileName}");
+
+                using var uploadStream = new MemoryStream(imageBytes, false);
+                await blockBlobClient.UploadAsync(uploadStream);
+                await blockBlobClient.SetHttpHeadersAsync(new BlobHttpHeaders { ContentType = contentType });
                 post.OriginalImageUrl = blockBlobClient.Uri.AbsoluteUri;
             }
         }
@@ -189,6 +215,37 @@
         await DbContext.SaveChangesAsync();
 
         Navigation.NavigateTo("/");
+    }
+
+    private static bool IsValidImageContent(byte[] data, string extension)
+    {
+        if (data.Length < 12)
+            return false;
+
+        return extension switch
+        {
+            ".jpg" or ".jpeg" => data[0] == 0xFF && data[1] == 0xD8 && data[2] == 0xFF,
+            ".png" => data[0] == 0x89 && data[1] == 0x50 && data[2] == 0x4E && data[3] == 0x47 &&
+                      data[4] == 0x0D && data[5] == 0x0A && data[6] == 0x1A && data[7] == 0x0A,
+            ".gif" => data[0] == 0x47 && data[1] == 0x49 && data[2] == 0x46 && data[3] == 0x38,
+            ".webp" => data[0] == 0x52 && data[1] == 0x49 && data[2] == 0x46 && data[3] == 0x46 &&
+                       data[8] == 0x57 && data[9] == 0x45 && data[10] == 0x42 && data[11] == 0x50,
+            ".heic" => data.Length >= 12 && data[4] == 0x66 && data[5] == 0x74 && data[6] == 0x79 && data[7] == 0x70,
+            _ => false
+        };
+    }
+
+    private static string GetContentTypeFromExtension(string extension)
+    {
+        return extension switch
+        {
+            ".jpg" or ".jpeg" => "image/jpeg",
+            ".png" => "image/png",
+            ".gif" => "image/gif",
+            ".webp" => "image/webp",
+            ".heic" => "image/heic",
+            _ => "application/octet-stream"
+        };
     }
 
     private class SubmitModel
