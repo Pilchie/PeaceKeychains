@@ -58,14 +58,32 @@ jobs:
       - name: Build with dotnet
         run: dotnet build --configuration Release
 
-      - name: dotnet publish
-        run: dotnet publish -c Release -o ${{env.DOTNET_ROOT}}/myapp
+      - name: Publish Blazor app
+        run: dotnet publish PeaceKeychains.Blazor -c Release -o ${{env.DOTNET_ROOT}}/blazor
 
-      - name: Upload artifact for deployment job
+      - name: Publish Web app
+        run: dotnet publish PeaceKeychains.Web -c Release -o ${{env.DOTNET_ROOT}}/web
+
+      - name: Publish Admin tool
+        run: dotnet publish PeaceKeychains.Admin -c Release -o ${{env.DOTNET_ROOT}}/admin
+
+      - name: Upload Blazor artifact for deployment
         uses: actions/upload-artifact@v4
         with:
-          name: .net-app
-          path: ${{env.DOTNET_ROOT}}/myapp
+          name: blazor-app
+          path: ${{env.DOTNET_ROOT}}/blazor
+
+      - name: Upload Web artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-app
+          path: ${{env.DOTNET_ROOT}}/web
+
+      - name: Upload Admin artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: admin-tool
+          path: ${{env.DOTNET_ROOT}}/admin
 
   deploy:
     permissions:
@@ -80,7 +98,7 @@ jobs:
       - name: Download artifact from build job
         uses: actions/download-artifact@v4
         with:
-          name: .net-app
+          name: blazor-app
 
       - name: Deploy to Azure Web App
         id: deploy-to-webapp
