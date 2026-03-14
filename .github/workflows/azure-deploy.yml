@@ -59,13 +59,13 @@ jobs:
         run: dotnet build --configuration Release
 
       - name: Publish Blazor app
-        run: dotnet publish PeaceKeychains.Blazor -c Release -o ${{env.DOTNET_ROOT}}/blazor
+        run: dotnet publish PeaceKeychains.Blazor -c Release --no-build --no-restore -o ${{env.DOTNET_ROOT}}/blazor
 
       - name: Publish Web app
-        run: dotnet publish PeaceKeychains.Web -c Release -o ${{env.DOTNET_ROOT}}/web
+        run: dotnet publish PeaceKeychains.Web -c Release --no-build --no-restore -o ${{env.DOTNET_ROOT}}/web
 
       - name: Publish Admin tool
-        run: dotnet publish PeaceKeychains.Admin -c Release -o ${{env.DOTNET_ROOT}}/admin
+        run: dotnet publish PeaceKeychains.Admin -c Release --no-build --no-restore -o ${{env.DOTNET_ROOT}}/admin
 
       - name: Upload Blazor artifact for deployment
         uses: actions/upload-artifact@v4
