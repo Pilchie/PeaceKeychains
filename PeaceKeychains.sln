@@ -14,6 +14,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PeaceKeychains.Shared", "Pe
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PeaceKeychains.Blazor", "PeaceKeychains.Blazor\PeaceKeychains.Blazor.csproj", "{97C2089A-6DF3-4078-ADE2-56FF378639B8}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PeaceKeychains.Admin", "PeaceKeychains.Admin\PeaceKeychains.Admin.csproj", "{924D0599-983E-4143-84A4-D7DB0816CC13}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -32,6 +34,10 @@ Global
 		{97C2089A-6DF3-4078-ADE2-56FF378639B8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{97C2089A-6DF3-4078-ADE2-56FF378639B8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{97C2089A-6DF3-4078-ADE2-56FF378639B8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{924D0599-983E-4143-84A4-D7DB0816CC13}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{924D0599-983E-4143-84A4-D7DB0816CC13}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{924D0599-983E-4143-84A4-D7DB0816CC13}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{924D0599-983E-4143-84A4-D7DB0816CC13}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
